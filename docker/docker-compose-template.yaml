@@ -416,6 +416,24 @@ services:
       ENABLE_WEBSITE_JINAREADER: ${ENABLE_WEBSITE_JINAREADER:-true}
       ENABLE_WEBSITE_FIRECRAWL: ${ENABLE_WEBSITE_FIRECRAWL:-true}
       ENABLE_WEBSITE_WATERCRAWL: ${ENABLE_WEBSITE_WATERCRAWL:-true}
+    # Caps SSR CPU/RAM so a hung or leaking Next.js render can't starve the host.
+    deploy:
+      resources:
+        limits:
+          cpus: "${WEB_CPU_LIMIT:-2}"
+          memory: ${WEB_MEMORY_LIMIT:-2g}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   # The PostgreSQL database.
   db_postgres:
