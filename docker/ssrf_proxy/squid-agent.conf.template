@@ -2,13 +2,15 @@
 # All traffic on this proxy is restricted to:
 #   - agent_backend /agent-stub/* endpoints
 #   - Dify API /files/* endpoints (signed upload/download URLs)
+#   - Dify API /v1/* endpoints (Service API, e.g. writing to a dataset)
 # External internet is allowed; all other private-network destinations are denied.
 
 include /etc/squid/dify_common.conf
 
 acl dst_agent_backend dstdomain agent_backend
-acl dst_dify_api dstdomain api
+acl dst_dify_api dstdomain api ${DIFY_AGENT_API_PUBLIC_DOMAIN}
 acl path_files urlpath_regex -i ^/files/
+acl path_service_api urlpath_regex -i ^/v1/
 acl path_agent_stub urlpath_regex -i ^/agent-stub/
 
 http_port ${HTTP_PORT}
@@ -17,5 +19,6 @@ http_access deny !Safe_ports
 http_access deny CONNECT !SSL_ports
 http_access allow dst_agent_backend path_agent_stub
 http_access allow dst_dify_api path_files
+http_access allow dst_dify_api path_service_api
 http_access deny to_private_networks
 http_access allow all
